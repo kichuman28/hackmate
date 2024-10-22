@@ -1,11 +1,28 @@
 // pages/dashboard.tsx
+import { useEffect } from 'react';
+import { useRouter } from 'next/router';
 import Navbar from '../components/Navbar';
 import Search from '../components/Search';
 import { useAuth } from '../hooks/useAuth';
 import '../app/globals.css';
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <>
