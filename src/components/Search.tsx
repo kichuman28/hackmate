@@ -3,7 +3,7 @@ import UserProfile from './UserProfile';
 
 const Search = () => {
   const [skill, setSkill] = useState('');
-  const [profiles, setProfiles] = useState([
+  const [profiles] = useState([
     {
       name: 'Alice Johnson',
       skills: ['JavaScript', 'React', 'Node.js'],
