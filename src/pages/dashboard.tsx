@@ -63,7 +63,7 @@ const Dashboard = () => {
   return (
     <ProtectedRoute>
       <Navbar />
-      <main className="flex flex-col items-center p-6 bg-gradient-to-r from-green-400 to-yellow-300 min-h-screen">
+      <main className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-green-400 to-yellow-300 p-6">
         <div className="max-w-4xl w-full bg-white shadow-md rounded-lg p-6">
           <h2 className="text-3xl font-bold text-center text-gray-800">
             Welcome, {user.displayName || 'User'}!

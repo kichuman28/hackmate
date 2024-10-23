@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useAuth } from '../hooks/useAuth';
 import { FcGoogle } from 'react-icons/fc';
 import '../app/globals.css';
+import Navbar from '../components/Navbar';
 
 const LoginPage = () => {
   const { user, loading, signInWithGoogle } = useAuth();
@@ -21,29 +22,32 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
-      <Card className="w-[350px]">
-        <CardHeader>
-          <CardTitle>Welcome</CardTitle>
-          <CardDescription>Sign in to access your dashboard</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button 
-            variant="outline" 
-            className="w-full" 
-            onClick={signInWithGoogle}
-          >
-            <FcGoogle className="mr-2 h-4 w-4" />
-            Sign in with Google
-          </Button>
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <p className="text-sm text-gray-500">
-            By signing in, you agree to our Terms and Privacy Policy.
-          </p>
-        </CardFooter>
-      </Card>
-    </div>
+    <>
+      <Navbar />
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 pt-20">
+        <Card className="w-[350px]">
+          <CardHeader>
+            <CardTitle>Welcome</CardTitle>
+            <CardDescription>Sign in to access your dashboard</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              variant="outline" 
+              className="w-full" 
+              onClick={signInWithGoogle}
+            >
+              <FcGoogle className="mr-2 h-4 w-4" />
+              Sign in with Google
+            </Button>
+          </CardContent>
+          <CardFooter className="flex justify-center">
+            <p className="text-sm text-gray-500">
+              By signing in, you agree to our Terms and Privacy Policy.
+            </p>
+          </CardFooter>
+        </Card>
+      </div>
+    </>
   );
 };
 
