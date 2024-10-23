@@ -1,20 +1,55 @@
 // pages/dashboard.tsx
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Navbar from '../components/Navbar';
-import Search from '../components/Search';
 import { useAuth } from '../hooks/useAuth';
+import { db } from '../lib/firebaseConfig';
+import { collection, query, getDocs, where } from 'firebase/firestore';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
 import '../app/globals.css';
+
+interface UserProfile {
+  id: string;
+  displayName: string;
+  photoUrl?: string;
+  college: string;
+  skills: string;
+}
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
+    } else if (user) {
+      fetchUsers();
     }
   }, [user, loading, router]);
+
+  const fetchUsers = async () => {
+    if (!user) return;
+    const usersCollection = collection(db, 'users');
+    const q = query(usersCollection, where('id', '!=', user.uid));
+    try {
+      const querySnapshot = await getDocs(q);
+      const fetchedUsers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserProfile));
+      setUsers(fetchedUsers);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
+  const filteredUsers = users.filter(u =>
+    u.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.skills?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.college?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (loading) {
     return <div>Loading...</div>;
@@ -30,15 +65,38 @@ const Dashboard = () => {
       <main className="flex flex-col items-center p-6 bg-gradient-to-r from-green-400 to-yellow-300 min-h-screen">
         <div className="max-w-4xl w-full bg-white shadow-md rounded-lg p-6">
           <h2 className="text-3xl font-bold text-center text-gray-800">
-            Welcome, {user?.displayName || 'User'}!
+            Welcome, {user.displayName || 'User'}!
           </h2>
           <p className="mt-2 text-gray-600 text-center">
             Here you can search for teammates for your next hackathon.
           </p>
           <div className="mt-6">
-            <h3 className="text-2xl font-semibold text-gray-700">Search for Teammates</h3>
-            <div className="mt-4">
-              <Search />
+            <h3 className="text-2xl font-semibold text-gray-700">Discover Other Hackers</h3>
+            <Input
+              type="text"
+              placeholder="Search by name, skills, or college"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="mt-4 mb-4"
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredUsers.map(user => (
+                <Card key={user.id}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Avatar>
+                        <AvatarImage src={user.photoUrl} alt={user.displayName} />
+                        <AvatarFallback>{user.displayName?.[0] || 'U'}</AvatarFallback>
+                      </Avatar>
+                      <span>{user.displayName}</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p><strong>College:</strong> {user.college || 'Not specified'}</p>
+                    <p><strong>Skills:</strong> {user.skills || 'Not specified'}</p>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         </div>
