@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import '../app/globals.css';
+import ProtectedRoute from '../components/ProtectedRoute';
 
 interface UserProfile {
   id: string;
@@ -60,7 +61,7 @@ const Dashboard = () => {
   }
 
   return (
-    <>
+    <ProtectedRoute>
       <Navbar />
       <main className="flex flex-col items-center p-6 bg-gradient-to-r from-green-400 to-yellow-300 min-h-screen">
         <div className="max-w-4xl w-full bg-white shadow-md rounded-lg p-6">
@@ -101,7 +102,7 @@ const Dashboard = () => {
           </div>
         </div>
       </main>
-    </>
+    </ProtectedRoute>
   );
 };
 

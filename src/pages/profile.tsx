@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import ProtectedRoute from '../components/ProtectedRoute';
+import { useRouter } from 'next/router';
 
 interface ProfileData {
   bio: string;
@@ -70,6 +72,7 @@ const ProfileView: React.FC<{ profile: ProfileData; user: any; onEdit: () => voi
 
 const ProfilePage: React.FC = () => {
   const { user, loading } = useAuth();
+  const router = useRouter();
   const [profile, setProfile] = useState<ProfileData>({
     bio: '',
     skills: '',
@@ -83,6 +86,12 @@ const ProfilePage: React.FC = () => {
   const [photo, setPhoto] = useState<File | null>(null);
   const [resume, setResume] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
 
   useEffect(() => {
     if (user) {
@@ -155,11 +164,11 @@ const ProfilePage: React.FC = () => {
   }
 
   if (!user) {
-    return <div>Please log in to view your profile.</div>;
+    return null; // This will prevent any flash of content before redirect
   }
 
   return (
-    <>
+    <ProtectedRoute>
       <Navbar />
       {isEditing ? (
         <div className="container mx-auto mt-10 p-4">
@@ -249,7 +258,7 @@ const ProfilePage: React.FC = () => {
       ) : (
         <ProfileView profile={profile} user={user} onEdit={() => setIsEditing(true)} />
       )}
-    </>
+    </ProtectedRoute>
   );
 };
 
