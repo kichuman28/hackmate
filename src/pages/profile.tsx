@@ -9,19 +9,29 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ProtectedRoute from '../components/ProtectedRoute';
 import { useRouter } from 'next/router';
 
 interface ProfileData {
-  name: string;  // Add this line
+  name: string;
   bio: string;
   skills: string;
   college: string;
+  course: string;
+  semester: string;
+  branch: string;
   linkedIn: string;
   github: string;
+  role: string;
   photoUrl?: string;
   followers?: number;
   following?: number;
+  projects: {
+    description: string;
+    github: string;
+    deployed: string;
+  }[];
 }
 
 const ProfileView: React.FC<{ profile: ProfileData; user: any; onEdit: () => void }> = ({ profile, user, onEdit }) => {
@@ -45,8 +55,32 @@ const ProfileView: React.FC<{ profile: ProfileData; user: any; onEdit: () => voi
         <p className="text-gray-600 mt-2">{profile.followers || 0} Followers · {profile.following || 0} Following</p>
         <p className="mt-4">{profile.bio}</p>
         <div className="mt-6">
+          <h2 className="text-xl font-semibold">Education</h2>
+          <p>Course: {profile.course}</p>
+          <p>Semester: {profile.semester}</p>
+          <p>Branch: {profile.branch}</p>
+        </div>
+        <div className="mt-6">
           <h2 className="text-xl font-semibold">Skills</h2>
           <p>{profile.skills}</p>
+        </div>
+        <div className="mt-6">
+          <h2 className="text-xl font-semibold">Role</h2>
+          <p>{profile.role}</p>
+        </div>
+        <div className="mt-6">
+          <h2 className="text-xl font-semibold">Projects</h2>
+          {profile.projects && profile.projects.length > 0 ? (
+            profile.projects.map((project, index) => (
+              <div key={index} className="mt-2">
+                <p><strong>Description:</strong> {project.description}</p>
+                <p><strong>GitHub:</strong> <a href={project.github} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{project.github}</a></p>
+                <p><strong>Deployed:</strong> <a href={project.deployed} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{project.deployed}</a></p>
+              </div>
+            ))
+          ) : (
+            <p>No projects added yet.</p>
+          )}
         </div>
         <div className="mt-6 flex space-x-4">
           {profile.linkedIn && (
@@ -69,14 +103,19 @@ const ProfilePage: React.FC = () => {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [profile, setProfile] = useState<ProfileData>({
-    name: '',  // Add this line
+    name: '',
     bio: '',
     skills: '',
     college: '',
+    course: '',
+    semester: '',
+    branch: '',
     linkedIn: '',
     github: '',
+    role: '',
     followers: 0,
     following: 0,
+    projects: [], // Initialize with an empty array
   });
   const [isEditing, setIsEditing] = useState(false);
   const [photo, setPhoto] = useState<File | null>(null);
@@ -102,13 +141,14 @@ const ProfilePage: React.FC = () => {
         const data = docSnap.data() as ProfileData;
         setProfile({
           ...data,
-          name: data.name || user.displayName || 'Anonymous User',  // Fallback chain
+          name: data.name || user.displayName || 'Anonymous User',
+          projects: data.projects || [], // Ensure projects is always an array
         });
       } else {
-        // If no profile exists, initialize with Google name or 'Anonymous User'
         setProfile(prev => ({ 
           ...prev, 
-          name: user.displayName || 'Anonymous User'
+          name: user.displayName || 'Anonymous User',
+          projects: [], // Set an empty array if no profile exists
         }));
       }
     }
@@ -116,6 +156,20 @@ const ProfilePage: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setProfile({ ...profile, [e.target.name]: e.target.value });
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setProfile({ ...profile, [name]: value });
+  };
+
+  const handleProjectChange = (index: number, field: string, value: string) => {
+    const updatedProjects = [...profile.projects];
+    updatedProjects[index] = { ...updatedProjects[index], [field]: value };
+    setProfile({ ...profile, projects: updatedProjects });
+  };
+
+  const addProject = () => {
+    setProfile({ ...profile, projects: [...profile.projects, { description: '', github: '', deployed: '' }] });
   };
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -137,21 +191,13 @@ const ProfilePage: React.FC = () => {
           photoUrl = await getDownloadURL(photoRef);
         }
 
-        const updatedProfile: Partial<ProfileData> = {
-          name: profile.name || undefined,  // Add this line
-          bio: profile.bio || undefined,
-          skills: profile.skills || undefined,
-          college: profile.college || undefined,
-          linkedIn: profile.linkedIn || undefined,
-          github: profile.github || undefined,
-          followers: profile.followers || 0,
-          following: profile.following || 0,
+        const updatedProfile: ProfileData = {
+          ...profile,
+          photoUrl,
         };
 
-        if (photoUrl) updatedProfile.photoUrl = photoUrl;
-
         await setDoc(doc(db, 'users', user.uid), updatedProfile, { merge: true });
-        setProfile(prevProfile => ({ ...prevProfile, ...updatedProfile }));
+        setProfile(updatedProfile);
         setIsEditing(false);
         alert('Profile updated successfully!');
       } catch (error) {
@@ -210,6 +256,46 @@ const ProfilePage: React.FC = () => {
                     />
                   </div>
                   <div>
+                    <label className="block mb-1">College</label>
+                    <Input
+                      type="text"
+                      name="college"
+                      value={profile.college}
+                      onChange={handleChange}
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-1">Course</label>
+                    <Input
+                      type="text"
+                      name="course"
+                      value={profile.course}
+                      onChange={handleChange}
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-1">Semester</label>
+                    <Input
+                      type="text"
+                      name="semester"
+                      value={profile.semester}
+                      onChange={handleChange}
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-1">Branch</label>
+                    <Input
+                      type="text"
+                      name="branch"
+                      value={profile.branch}
+                      onChange={handleChange}
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
                     <label className="block mb-1">Skills (comma-separated)</label>
                     <Input
                       type="text"
@@ -220,14 +306,19 @@ const ProfilePage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block mb-1">College</label>
-                    <Input
-                      type="text"
-                      name="college"
-                      value={profile.college}
-                      onChange={handleChange}
-                      className="w-full"
-                    />
+                    <label className="block mb-1">Role</label>
+                    <Select onValueChange={(value) => handleSelectChange('role', value)} value={profile.role}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select your primary role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="frontend">Frontend</SelectItem>
+                        <SelectItem value="backend">Backend</SelectItem>
+                        <SelectItem value="fullstack">Full Stack</SelectItem>
+                        <SelectItem value="devops">DevOps</SelectItem>
+                        <SelectItem value="ml">Machine Learning</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <label className="block mb-1">LinkedIn</label>
@@ -248,6 +339,32 @@ const ProfilePage: React.FC = () => {
                       onChange={handleChange}
                       className="w-full"
                     />
+                  </div>
+                  <div>
+                    <label className="block mb-1">Projects</label>
+                    {profile.projects.map((project, index) => (
+                      <div key={index} className="mb-4">
+                        <Textarea
+                          value={project.description}
+                          onChange={(e) => handleProjectChange(index, 'description', e.target.value)}
+                          placeholder="Project Description"
+                          className="mb-2 w-full"
+                        />
+                        <Input
+                          value={project.github}
+                          onChange={(e) => handleProjectChange(index, 'github', e.target.value)}
+                          placeholder="GitHub Repository URL"
+                          className="mb-2 w-full"
+                        />
+                        <Input
+                          value={project.deployed}
+                          onChange={(e) => handleProjectChange(index, 'deployed', e.target.value)}
+                          placeholder="Deployed Project URL"
+                          className="mb-2 w-full"
+                        />
+                      </div>
+                    ))}
+                    <Button onClick={addProject} type="button" variant="outline" className="mb-4">Add Another Project</Button>
                   </div>
                   <div className="flex space-x-4">
                     <Button type="submit" disabled={isSubmitting}>
