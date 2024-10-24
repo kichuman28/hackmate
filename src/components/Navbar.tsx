@@ -49,7 +49,7 @@ const Navbar = ({ className }: { className?: string }) => {
                 <div className="flex flex-col space-y-4 text-sm">
                   <HoveredLink href="/profile">Profile</HoveredLink>
                   <HoveredLink href="/dashboard">Find hackers!</HoveredLink>
-                  <HoveredLink href="/settings">Discover</HoveredLink>
+                  <HoveredLink href="/discover">Discover</HoveredLink>
                 </div>
               </MenuItem>
             )}

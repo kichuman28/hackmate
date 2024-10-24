@@ -13,6 +13,7 @@ import { storage } from '../lib/firebaseConfig';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 interface OnboardingData {
+  name: string;
   college: string;
   course: string;
   semester: string;
@@ -36,6 +37,7 @@ const OnboardingPage: React.FC = () => {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [data, setData] = useState<OnboardingData>({
+    name: user?.displayName || '',  // Initialize with Google name
     college: '',
     course: '',
     semester: '',
@@ -119,6 +121,13 @@ const OnboardingPage: React.FC = () => {
       case 1:
         return (
           <>
+            <Input
+              name="name"
+              value={data.name}
+              onChange={handleChange}
+              placeholder="Your Name"
+              className="mb-4"
+            />
             <Input
               type="file"
               onChange={handlePhotoChange}

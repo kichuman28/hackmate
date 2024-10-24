@@ -13,6 +13,7 @@ import ProtectedRoute from '../components/ProtectedRoute';
 import { useRouter } from 'next/router';
 
 interface ProfileData {
+  name: string;  // Add this line
   bio: string;
   skills: string;
   college: string;
@@ -30,14 +31,14 @@ const ProfileView: React.FC<{ profile: ProfileData; user: any; onEdit: () => voi
         <div className="h-48 bg-gradient-to-r from-blue-400 to-purple-500 rounded-t-lg"></div>
         <Avatar className="w-32 h-32 absolute bottom-0 left-8 transform translate-y-1/2 border-4 border-white">
           <AvatarImage src={profile.photoUrl} alt="Profile" />
-          <AvatarFallback>{user.displayName?.[0] || 'U'}</AvatarFallback>
+          <AvatarFallback>{profile.name?.[0] || 'U'}</AvatarFallback>
         </Avatar>
       </div>
       <div className="mt-16 px-8">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">{user.displayName || 'Your Name'}</h1>
-            <p className="text-gray-600 text-sm mt-1">{profile.college || 'Your College'}</p>
+            <h1 className="text-3xl font-bold">{profile.name || user.displayName || 'Anonymous User'}</h1>
+            <p className="text-gray-600 text-sm mt-1">{profile.college || 'College not specified'}</p>
           </div>
           <Button onClick={onEdit}>Edit Profile</Button>
         </div>
@@ -68,6 +69,7 @@ const ProfilePage: React.FC = () => {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [profile, setProfile] = useState<ProfileData>({
+    name: '',  // Add this line
     bio: '',
     skills: '',
     college: '',
@@ -97,7 +99,17 @@ const ProfilePage: React.FC = () => {
       const docRef = doc(db, 'users', user.uid);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        setProfile(docSnap.data() as ProfileData);
+        const data = docSnap.data() as ProfileData;
+        setProfile({
+          ...data,
+          name: data.name || user.displayName || 'Anonymous User',  // Fallback chain
+        });
+      } else {
+        // If no profile exists, initialize with Google name or 'Anonymous User'
+        setProfile(prev => ({ 
+          ...prev, 
+          name: user.displayName || 'Anonymous User'
+        }));
       }
     }
   };
@@ -126,6 +138,7 @@ const ProfilePage: React.FC = () => {
         }
 
         const updatedProfile: Partial<ProfileData> = {
+          name: profile.name || undefined,  // Add this line
           bio: profile.bio || undefined,
           skills: profile.skills || undefined,
           college: profile.college || undefined,
@@ -172,10 +185,20 @@ const ProfilePage: React.FC = () => {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="flex items-center space-x-4">
                     <Avatar className="w-24 h-24">
-                      <AvatarImage src={profile.photoUrl} alt={user.displayName || 'User'} />
-                      <AvatarFallback>{user.displayName?.[0] || 'U'}</AvatarFallback>
+                      <AvatarImage src={profile.photoUrl} alt={profile.name || 'User'} />
+                      <AvatarFallback>{profile.name?.[0] || 'U'}</AvatarFallback>
                     </Avatar>
                     <Input type="file" onChange={handlePhotoChange} accept="image/*" />
+                  </div>
+                  <div>
+                    <label className="block mb-1">Name</label>
+                    <Input
+                      type="text"
+                      name="name"
+                      value={profile.name}
+                      onChange={handleChange}
+                      className="w-full"
+                    />
                   </div>
                   <div>
                     <label className="block mb-1">Bio</label>

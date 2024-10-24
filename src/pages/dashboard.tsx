@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../hooks/useAuth';
 import { db } from '../lib/firebaseConfig';
-import { collection, query, getDocs, where } from 'firebase/firestore';
+import { collection, query, getDocs, where, doc, getDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,7 @@ import ProtectedRoute from '../components/ProtectedRoute';
 
 interface UserProfile {
   id: string;
-  displayName: string;
+  name: string;
   photoUrl?: string;
   college: string;
   skills: string;
@@ -24,14 +24,29 @@ const Dashboard = () => {
   const router = useRouter();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentUserName, setCurrentUserName] = useState('');
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
     } else if (user) {
+      fetchCurrentUserName();
       fetchUsers();
     }
   }, [user, loading, router]);
+
+  const fetchCurrentUserName = async () => {
+    if (user) {
+      const docRef = doc(db, 'users', user.uid);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setCurrentUserName(data.name || user.displayName || 'User');
+      } else {
+        setCurrentUserName(user.displayName || 'User');
+      }
+    }
+  };
 
   const fetchUsers = async () => {
     if (!user) return;
@@ -39,7 +54,16 @@ const Dashboard = () => {
     const q = query(usersCollection, where('id', '!=', user.uid));
     try {
       const querySnapshot = await getDocs(q);
-      const fetchedUsers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserProfile));
+      const fetchedUsers = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          name: data.name || 'Anonymous User',
+          photoUrl: data.photoUrl,
+          college: data.college,
+          skills: data.skills,
+        } as UserProfile;
+      });
       setUsers(fetchedUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -47,7 +71,7 @@ const Dashboard = () => {
   };
 
   const filteredUsers = users.filter(u =>
-    u.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.skills?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.college?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -66,7 +90,7 @@ const Dashboard = () => {
       <main className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-green-400 to-yellow-300 p-6">
         <div className="max-w-4xl w-full bg-white shadow-md rounded-lg p-6">
           <h2 className="text-3xl font-bold text-center text-gray-800">
-            Welcome, {user.displayName || 'User'}!
+            Welcome, {currentUserName}!
           </h2>
           <p className="mt-2 text-gray-600 text-center">
             Here you can search for teammates for your next hackathon.
@@ -86,10 +110,10 @@ const Dashboard = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <Avatar>
-                        <AvatarImage src={user.photoUrl} alt={user.displayName} />
-                        <AvatarFallback>{user.displayName?.[0] || 'U'}</AvatarFallback>
+                        <AvatarImage src={user.photoUrl} alt={user.name} />
+                        <AvatarFallback>{user.name?.[0] || 'U'}</AvatarFallback>
                       </Avatar>
-                      <span>{user.displayName}</span>
+                      <span>{user.name}</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
