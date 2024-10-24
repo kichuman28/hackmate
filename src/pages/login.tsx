@@ -8,14 +8,18 @@ import '../app/globals.css';
 import Navbar from '../components/Navbar';
 
 const LoginPage = () => {
-  const { user, loading, signInWithGoogle } = useAuth();
+  const { user, loading, signInWithGoogle, onboardingCompleted } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!loading && user) {
-      router.push('/dashboard');
+      if (onboardingCompleted === false) {
+        router.push('/onboarding');
+      } else {
+        router.push('/dashboard');
+      }
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, onboardingCompleted]);
 
   if (loading) {
     return <div>Loading...</div>;

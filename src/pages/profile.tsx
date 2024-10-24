@@ -18,7 +18,6 @@ interface ProfileData {
   college: string;
   linkedIn: string;
   github: string;
-  resumeUrl?: string;
   photoUrl?: string;
   followers?: number;
   following?: number;
@@ -59,11 +58,6 @@ const ProfileView: React.FC<{ profile: ProfileData; user: any; onEdit: () => voi
               GitHub
             </a>
           )}
-          {profile.resumeUrl && (
-            <a href={profile.resumeUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-              Resume
-            </a>
-          )}
         </div>
       </div>
     </div>
@@ -84,7 +78,6 @@ const ProfilePage: React.FC = () => {
   });
   const [isEditing, setIsEditing] = useState(false);
   const [photo, setPhoto] = useState<File | null>(null);
-  const [resume, setResume] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -119,19 +112,12 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  const handleResumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setResume(e.target.files[0]);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (user) {
       setIsSubmitting(true);
       try {
         let photoUrl = profile.photoUrl;
-        let resumeUrl = profile.resumeUrl;
 
         if (photo) {
           const photoRef = ref(storage, `profile-photos/${user.uid}`);
@@ -139,15 +125,20 @@ const ProfilePage: React.FC = () => {
           photoUrl = await getDownloadURL(photoRef);
         }
 
-        if (resume) {
-          const resumeRef = ref(storage, `resumes/${user.uid}`);
-          await uploadBytes(resumeRef, resume);
-          resumeUrl = await getDownloadURL(resumeRef);
-        }
+        const updatedProfile: Partial<ProfileData> = {
+          bio: profile.bio || undefined,
+          skills: profile.skills || undefined,
+          college: profile.college || undefined,
+          linkedIn: profile.linkedIn || undefined,
+          github: profile.github || undefined,
+          followers: profile.followers || 0,
+          following: profile.following || 0,
+        };
 
-        const updatedProfile = { ...profile, photoUrl, resumeUrl };
-        await setDoc(doc(db, 'users', user.uid), updatedProfile);
-        setProfile(updatedProfile);
+        if (photoUrl) updatedProfile.photoUrl = photoUrl;
+
+        await setDoc(doc(db, 'users', user.uid), updatedProfile, { merge: true });
+        setProfile(prevProfile => ({ ...prevProfile, ...updatedProfile }));
         setIsEditing(false);
         alert('Profile updated successfully!');
       } catch (error) {
@@ -164,7 +155,7 @@ const ProfilePage: React.FC = () => {
   }
 
   if (!user) {
-    return null; // This will prevent any flash of content before redirect
+    return null;
   }
 
   return (
@@ -234,15 +225,6 @@ const ProfilePage: React.FC = () => {
                       onChange={handleChange}
                       className="w-full"
                     />
-                  </div>
-                  <div>
-                    <label className="block mb-1">Resume</label>
-                    <Input type="file" onChange={handleResumeChange} accept=".pdf,.doc,.docx" />
-                    {profile.resumeUrl && (
-                      <a href={profile.resumeUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                        View current resume
-                      </a>
-                    )}
                   </div>
                   <div className="flex space-x-4">
                     <Button type="submit" disabled={isSubmitting}>
