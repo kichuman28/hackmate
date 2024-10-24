@@ -3,30 +3,23 @@ import React, { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../hooks/useAuth';
 
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-}
-
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { user, loading } = useAuth();
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading, onboardingCompleted } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
+    } else if (!loading && user && onboardingCompleted === false && router.pathname !== '/onboarding') {
+      router.push('/onboarding');
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, onboardingCompleted]);
 
-  if (loading) {
-    return <div>Loading...</div>; // You can replace this with a proper loading component
-  }
-
-  if (!user) {
-    return null; // Or a "You need to be logged in" message
+  if (loading || (!user && typeof window !== 'undefined')) {
+    return <div>Loading...</div>;
   }
 
   return <>{children}</>;
 };
 
 export default ProtectedRoute;
-
