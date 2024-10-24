@@ -33,7 +33,7 @@ const Navbar = ({ className }: { className?: string }) => {
         isScrolled ? "p-2" : "p-4"
       )}>
         <Link href="/" className="text-xl font-bold text-black dark:text-white">
-          Hackathon Finder
+          hackmate
         </Link>
         <div className="flex items-center space-x-4">
           <Menu setActive={setActive}>
