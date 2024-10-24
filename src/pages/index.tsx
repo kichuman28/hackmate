@@ -26,7 +26,7 @@ export default function Home() {
             <h1 className="text-4xl md:text-7xl font-bold mb-4 text-black">
               looking for a great team?
             </h1>
-            <h2 className="text-2xl md:text-4xl mb-8 text-neutral-200 font-extralight">
+            <h2 className="text-2xl md:text-4xl mb-8 text-black font-extralight">
               stress no more.
             </h2>
             <Button
