@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ProtectedRoute from '../components/ProtectedRoute';
 import { useRouter } from 'next/router';
+import "../app/globals.css";
 
 interface ProfileData {
   name: string;
@@ -231,8 +232,8 @@ const ProfilePage: React.FC = () => {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="flex items-center space-x-4">
                     <Avatar className="w-24 h-24">
-                      {/* <AvatarImage src={profile.photoUrl} alt={profile.name || 'User'} /> */}
-                      {/* <AvatarFallback>{profile.name?.[0] || 'U'}</AvatarFallback> */}
+                      <AvatarImage src={profile.photoUrl} alt={profile.name || 'User'} />
+                      <AvatarFallback>{profile.name?.[0] || 'U'}</AvatarFallback>
                     </Avatar>
                     <Input type="file" onChange={handlePhotoChange} accept="image/*" />
                   </div>
