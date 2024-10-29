@@ -1,3 +1,5 @@
+'use client'
+import "../app/globals.css";
 import React, { useEffect, useState } from 'react';
 import { useProtectedRoute } from '../hooks/useProtectedRoute';
 import { useAuth } from '../hooks/useAuth';
