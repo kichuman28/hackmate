@@ -2,11 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useAuth } from '../hooks/useAuth';
 import { HoveredLink, Menu, MenuItem, ProductItem } from "@/components/ui/navbar-menu";
 import { cn } from "@/lib/utils";
 
 const Navbar = ({ className }: { className?: string }) => {
+  const router = useRouter();
   const { user, signInWithGoogle, logout } = useAuth();
   const [active, setActive] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -19,6 +21,15 @@ const Navbar = ({ className }: { className?: string }) => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push('/');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
 
   return (
     <nav className={cn(
@@ -62,11 +73,17 @@ const Navbar = ({ className }: { className?: string }) => {
             </MenuItem>
           </Menu>
           {user ? (
-            <button onClick={logout} className="bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition-colors">
+            <button 
+              onClick={handleLogout} 
+              className="bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition-colors"
+            >
               Logout
             </button>
           ) : (
-            <button onClick={signInWithGoogle} className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition-colors">
+            <button 
+              onClick={signInWithGoogle} 
+              className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition-colors"
+            >
               Sign In with Google
             </button>
           )}
