@@ -17,6 +17,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Navbar from '../../components/Navbar';
 import { format } from 'date-fns';
+import "../../app/globals.css"
 import Link from 'next/link';
 
 interface ChatUser {
