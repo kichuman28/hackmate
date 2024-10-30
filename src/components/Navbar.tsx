@@ -61,6 +61,7 @@ const Navbar = ({ className }: { className?: string }) => {
                   <HoveredLink href="/profile">Profile</HoveredLink>
                   <HoveredLink href="/dashboard">Find hackers!</HoveredLink>
                   <HoveredLink href="/discover">Discover</HoveredLink>
+                  <HoveredLink href="/chats/overview">Messages</HoveredLink>
                 </div>
               </MenuItem>
             )}
