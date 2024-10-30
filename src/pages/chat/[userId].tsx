@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Navbar from '../../components/Navbar';
 import { format } from 'date-fns';
+import "../../app/globals.css"
 
 interface Message {
   id: string;
