@@ -2,10 +2,7 @@
   "/_app": "pages/_app.js",
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
-  "/discover": "pages/discover.js",
-  "/login": "pages/login.js",
-  "/dashboard": "pages/dashboard.js",
-  "/profile": "pages/profile.js",
   "/onboarding": "pages/onboarding.js",
-  "/chat/[userId]": "pages/chat/[userId].js"
+  "/profile": "pages/profile.js",
+  "/dashboard": "pages/dashboard.js"
 }
