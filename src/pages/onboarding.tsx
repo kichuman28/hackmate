@@ -22,7 +22,7 @@ interface OnboardingData {
   branch: string;
   skills: string;
   github: string;
-  linkedin: string;
+  linkedIn: string;
   role: string;
   bio: string;
   photoUrl?: string;
@@ -46,7 +46,7 @@ const OnboardingPage: React.FC = () => {
     branch: '',
     skills: '',
     github: '',
-    linkedin: '',
+    linkedIn: '',
     role: '',
     bio: '',
     projects: [{ description: '', github: '', deployed: '' }],
@@ -191,8 +191,8 @@ const OnboardingPage: React.FC = () => {
               className="mb-4"
             />
             <Input
-              name="linkedin"
-              value={data.linkedin}
+              name="linkedIn"
+              value={data.linkedIn}
               onChange={handleChange}
               placeholder="LinkedIn Profile URL"
               className="mb-4"

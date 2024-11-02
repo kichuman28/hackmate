@@ -23,7 +23,7 @@ interface UserProfile {
 }
 
 const DiscoverPage: React.FC = () => {
-  useProtectedRoute();
+  const { loading } = useProtectedRoute();
   const { user } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
 
@@ -48,6 +48,10 @@ const DiscoverPage: React.FC = () => {
 
     fetchUsers();
   }, [user]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-background">

@@ -4,14 +4,19 @@ import { useRouter } from 'next/router';
 import { useAuth } from './useAuth';
 
 export const useProtectedRoute = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, onboardingCompleted } = useAuth();
   const router = useRouter();
+  const currentPath = router.pathname;
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
+    if (!loading) {
+      if (!user) {
+        router.push('/login');
+      } else if (!onboardingCompleted && currentPath !== '/onboarding') {
+        router.push('/onboarding');
+      }
     }
-  }, [user, loading, router]);
+  }, [user, loading, onboardingCompleted, router, currentPath]);
 
   return { user, loading };
 };
