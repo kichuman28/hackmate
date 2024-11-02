@@ -4,5 +4,7 @@
   "/": "pages/index.js",
   "/onboarding": "pages/onboarding.js",
   "/profile": "pages/profile.js",
-  "/dashboard": "pages/dashboard.js"
+  "/dashboard": "pages/dashboard.js",
+  "/discover": "pages/discover.js",
+  "/chats/overview": "pages/chats/overview.js"
 }
