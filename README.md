@@ -1,4 +1,4 @@
-# Hackmate
+# Hackmate (In Progress)
 
 ![image](https://github.com/user-attachments/assets/0f0b56ca-8fc2-492c-a592-8100e67743e4)
 
