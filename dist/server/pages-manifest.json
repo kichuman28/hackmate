@@ -1,1 +1,10 @@
-{"/chat/[userId]":"pages/chat/[userId].html","/chats/overview":"pages/chats/overview.html","/dashboard":"pages/dashboard.html","/discover":"pages/discover.html","/":"pages/index.html","/login":"pages/login.html","/onboarding":"pages/onboarding.html","/profile":"pages/profile.html","/_error":"pages/_error.js","/_app":"pages/_app.js","/_document":"pages/_document.js","/404":"pages/404.html"}
+{
+  "/_app": "pages/_app.js",
+  "/_document": "pages/_document.js",
+  "/": "pages/index.js",
+  "/profile": "pages/profile.js",
+  "/dashboard": "pages/dashboard.js",
+  "/discover": "pages/discover.js",
+  "/chats/overview": "pages/chats/overview.js",
+  "/chat/[userId]": "pages/chat/[userId].js"
+}
