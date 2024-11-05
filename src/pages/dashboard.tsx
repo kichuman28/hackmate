@@ -45,7 +45,7 @@ const Dashboard = () => {
     
     try {
       const usersRef = collection(db, 'users');
-      let constraints = [];
+      const constraints = [];
       
       if (filters.teamStatus !== 'all') {
         constraints.push(where('teamStatus', '==', filters.teamStatus));

@@ -1,7 +1,9 @@
 {
   "/_app": "pages/_app.js",
   "/_document": "pages/_document.js",
-  "/dashboard": "pages/dashboard.js",
   "/": "pages/index.js",
-  "/profile": "pages/profile.js"
+  "/profile": "pages/profile.js",
+  "/discover": "pages/discover.js",
+  "/dashboard": "pages/dashboard.js",
+  "/chat/[userId]": "pages/chat/[userId].js"
 }
