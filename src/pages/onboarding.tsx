@@ -11,11 +11,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { COLLEGES, COURSES, BRANCHES, SEMESTERS, SKILLS } from '@/app/constants';
+import { COLLEGES, COURSES, BRANCHES, SEMESTERS, SKILLS, TEAM_STATUS, EXPERIENCE_LEVELS, TEAM_SIZES, PROJECT_INTERESTS } from '@/app/constants';
 
 // Types and Interfaces
 interface Project {
@@ -37,6 +37,13 @@ interface OnboardingData {
   bio: string;
   photoUrl?: string;
   projects: Project[];
+  teamStatus: string;
+  projectInterests: string[];
+  experienceLevel: string;
+  availabilityPreference: string;
+  communicationPreference: string[];
+  preferredTeamSize: string;
+  hackathonInterests: string[];
 }
 
 interface ValidationErrors {
@@ -101,6 +108,13 @@ const OnboardingPage: React.FC = () => {
     role: '',
     bio: '',
     projects: [{ description: '', github: '', deployed: '' }],
+    teamStatus: TEAM_STATUS.LOOKING,
+    projectInterests: [],
+    experienceLevel: '',
+    availabilityPreference: '',
+    communicationPreference: [],
+    preferredTeamSize: '',
+    hackathonInterests: [],
   });
 
   const [photo, setPhoto] = useState<File | null>(null);
@@ -331,7 +345,7 @@ const OnboardingPage: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(3)) {
+    if (!validateStep(4)) {
       return;
     }
 
@@ -351,6 +365,13 @@ const OnboardingPage: React.FC = () => {
         skills: selectedSkills.join(', '),
         photoUrl,
         onboardingCompleted: true,
+        teamStatus: data.teamStatus,
+        projectInterests: data.projectInterests,
+        experienceLevel: data.experienceLevel,
+        availabilityPreference: data.availabilityPreference,
+        communicationPreference: data.communicationPreference,
+        preferredTeamSize: data.preferredTeamSize,
+        hackathonInterests: data.hackathonInterests,
       };
 
       await setDoc(doc(db, 'users', user!.uid), onboardingData, { merge: true });
@@ -607,9 +628,94 @@ const OnboardingPage: React.FC = () => {
           </div>
         );
 
+      case 4:
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium">Team Preferences</h3>
+              <p className="text-sm text-muted-foreground mb-4">Let others know about your team status</p>
+              
+              <Select 
+                value={data.teamStatus} 
+                onValueChange={(value) => handleSelectChange('teamStatus', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Team Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(TEAM_STATUS).map(([key, value]) => (
+                    <SelectItem key={value} value={value}>
+                      {key.charAt(0) + key.slice(1).toLowerCase().replace('_', ' ')}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <div className="mt-4">
+                <p className="text-sm font-medium mb-2">Project Interests</p>
+                <div className="flex flex-wrap gap-2">
+                  {PROJECT_INTERESTS.map(interest => (
+                    <Badge
+                      key={interest}
+                      variant={data.projectInterests.includes(interest) ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => toggleArrayField('projectInterests', interest)}
+                    >
+                      {interest}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              <Select 
+                value={data.experienceLevel} 
+                onValueChange={(value) => handleSelectChange('experienceLevel', value)}
+              >
+                <SelectTrigger className="mt-4">
+                  <SelectValue placeholder="Select Experience Level" />
+                </SelectTrigger>
+                <SelectContent>
+                  {EXPERIENCE_LEVELS.map(level => (
+                    <SelectItem key={level} value={level.toLowerCase()}>
+                      {level}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select 
+                value={data.preferredTeamSize} 
+                onValueChange={(value) => handleSelectChange('preferredTeamSize', value)}
+              >
+                <SelectTrigger className="mt-4">
+                  <SelectValue placeholder="Preferred Team Size" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TEAM_SIZES.map(size => (
+                    <SelectItem key={size.value} value={size.value}>
+                      {size.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        );
+
       default:
         return null;
     }
+  };
+
+  const toggleArrayField = (field: keyof OnboardingData, value: string) => {
+    setData(prev => {
+      const array = prev[field] as string[];
+      return {
+        ...prev,
+        [field]: array.includes(value)
+          ? array.filter(item => item !== value)
+          : [...array, value]
+      };
+    });
   };
 
   if (loading) {
@@ -621,7 +727,7 @@ const OnboardingPage: React.FC = () => {
       <Card className="w-full max-w-[500px]">
         <CardHeader>
           <CardTitle>Complete Your Profile</CardTitle>
-          <CardDescription>Step {step} of 3</CardDescription>
+          <CardDescription>Step {step} of 4</CardDescription>
         </CardHeader>
         <CardContent>
           {renderStep()}
@@ -637,7 +743,7 @@ const OnboardingPage: React.FC = () => {
               </Button>
             )}
             <div className="ml-auto">
-              {step < 3 ? (
+              {step < 4 ? (
                 <Button
                   onClick={() => handleStepChange(step + 1)}
                   disabled={isSubmitting}

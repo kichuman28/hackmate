@@ -25,7 +25,7 @@ const Navbar = ({ className }: { className?: string }) => {
   const handleLogout = async () => {
     try {
       await logout();
-      router.push('/');
+      window.location.href = '/';
     } catch (error) {
       console.error('Error logging out:', error);
     }

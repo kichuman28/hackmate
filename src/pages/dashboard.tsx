@@ -1,131 +1,135 @@
 // pages/dashboard.tsx
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import Navbar from '../components/Navbar';
 import { useAuth } from '../hooks/useAuth';
 import { db } from '../lib/firebaseConfig';
-import { collection, query, getDocs, where, doc, getDoc } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import '../app/globals.css';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import Navbar from '../components/Navbar';
 import ProtectedRoute from '../components/ProtectedRoute';
-
-interface UserProfile {
-  id: string;
-  name: string;
-  photoUrl?: string;
-  college: string;
-  skills: string;
-}
+import { Button } from "@/components/ui/button";
+import { TeamCard } from '@/components/TeamCard';
+import { TeamFiltersSection } from '@/components/TeamFilters';
+import { UserProfile, TeamFilters } from '@/types/team';
+import { TEAM_STATUS } from '@/app/constants';
 
 const Dashboard = () => {
-  const { user, loading } = useAuth();
   const router = useRouter();
+  const { user } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentUserName, setCurrentUserName] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState<TeamFilters>({
+    skills: '',
+    projectInterest: 'all',
+    teamStatus: 'all',
+    experienceLevel: 'all'
+  });
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    } else if (user) {
-      fetchCurrentUserName();
-      fetchUsers();
-    }
-  }, [user, loading, router]);
-
-  const fetchCurrentUserName = async () => {
-    if (user) {
-      const docRef = doc(db, 'users', user.uid);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setCurrentUserName(data.name || user.displayName || 'User');
-      } else {
-        setCurrentUserName(user.displayName || 'User');
-      }
-    }
-  };
+    if (user) fetchUsers();
+  }, [user, filters]);
 
   const fetchUsers = async () => {
     if (!user) return;
-    const usersCollection = collection(db, 'users');
-    const q = query(usersCollection, where('id', '!=', user.uid));
+    setLoading(true);
+    
     try {
+      const usersRef = collection(db, 'users');
+      
+      // First, let's try without any constraints to see if we get any users
+      const q = query(usersRef);
+      
+      console.log('Current user ID:', user.uid); // Log current user's ID
+      
       const querySnapshot = await getDocs(q);
-      const fetchedUsers = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
+      console.log('Total users found:', querySnapshot.size);
+      
+      // Log all users to see what we're getting
+      querySnapshot.forEach(doc => {
+        console.log('User:', {
           id: doc.id,
-          name: data.name || 'Anonymous User',
-          photoUrl: data.photoUrl,
-          college: data.college,
-          skills: data.skills,
-        } as UserProfile;
+          data: doc.data()
+        });
       });
-      setUsers(fetchedUsers);
+
+      let usersList = querySnapshot.docs.map(doc => ({ 
+        id: doc.id, 
+        ...doc.data() 
+      } as UserProfile));
+
+      console.log('Mapped users list:', usersList);
+      
+      setUsers(usersList);
     } catch (error) {
       console.error("Error fetching users:", error);
+      setError(error instanceof Error ? error.message : 'An error occurred while fetching users');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const filteredUsers = users.filter(u =>
-    u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.skills?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.college?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!user) {
-    return null;
-  }
-
   return (
     <ProtectedRoute>
-      <Navbar />
-      <main className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-green-400 to-yellow-300 p-6">
-        <div className="max-w-4xl w-full bg-white shadow-md rounded-lg p-6">
-          <h2 className="text-3xl font-bold text-center text-gray-800">
-            Welcome, {currentUserName}!
-          </h2>
-          <p className="mt-2 text-gray-600 text-center">
-            Here you can search for teammates for your next hackathon.
-          </p>
-          <div className="mt-6">
-            <h3 className="text-2xl font-semibold text-gray-700">Discover Other Hackers</h3>
-            <Input
-              type="text"
-              placeholder="Search by name, skills, or college"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="mt-4 mb-4"
-            />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredUsers.map(user => (
-                <Card key={user.id}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Avatar>
-                        <AvatarImage src={user.photoUrl} alt={user.name} />
-                        <AvatarFallback>{user.name?.[0] || 'U'}</AvatarFallback>
-                      </Avatar>
-                      <span>{user.name}</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p><strong>College:</strong> {user.college || 'Not specified'}</p>
-                    <p><strong>Skills:</strong> {user.skills || 'Not specified'}</p>
-                  </CardContent>
-                </Card>
-              ))}
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50">
+        <Navbar />
+        <main className="container mx-auto px-4 pt-24">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h1 className="text-4xl font-bold">Find Your Dream Team</h1>
+                <p className="text-gray-600 mt-2">
+                  Connect with other hackers and build something amazing together
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => router.push('/my-connections')}
+              >
+                View Connections
+              </Button>
             </div>
+            
+            <TeamFiltersSection 
+              filters={filters}
+              onFilterChange={setFilters}
+            />
+
+            {error ? (
+              <div className="text-center py-8">
+                <p className="text-red-600">Error: {error}</p>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setError(null);
+                    fetchUsers();
+                  }}
+                  className="mt-4"
+                >
+                  Try Again
+                </Button>
+              </div>
+            ) : loading ? (
+              <div className="text-center py-8">
+                <p>Loading potential teammates...</p>
+              </div>
+            ) : users.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-600">No users found matching your criteria</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {users.map((profile) => (
+                  <TeamCard
+                    key={profile.id}
+                    profile={profile}
+                    currentUserId={user!.uid}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </ProtectedRoute>
   );
 };

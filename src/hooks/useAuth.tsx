@@ -32,7 +32,17 @@ export const useAuth = () => {
     }
   };
 
-  const logout = async () => await signOut(auth);
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      // Clear any local state if needed
+      setUser(null);
+      return true;
+    } catch (error) {
+      console.error('Error signing out:', error);
+      throw error;
+    }
+  };
 
   return { user, loading, signInWithGoogle, logout, onboardingCompleted };
 };

@@ -14,6 +14,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import ProtectedRoute from '../components/ProtectedRoute';
 import { useRouter } from 'next/router';
 import "../app/globals.css";
+import { Badge } from "@/components/ui/badge";
+import { 
+  TEAM_STATUS, 
+  EXPERIENCE_LEVELS, 
+  PROJECT_INTERESTS, 
+  TEAM_SIZES,
+  HACKATHON_INTERESTS,
+  COMMUNICATION_PREFERENCES 
+} from '@/app/constants';
+import { toast } from '@/components/ui/use-toast';
 
 interface ProfileData {
   name: string;
@@ -34,6 +44,13 @@ interface ProfileData {
     github: string;
     deployed: string;
   }[];
+  teamStatus: string;
+  projectInterests: string[];
+  experienceLevel: string;
+  availabilityPreference: string;
+  communicationPreference: string[];
+  preferredTeamSize: string;
+  hackathonInterests: string[];
 }
 
 const ProfileView: React.FC<{ profile: ProfileData; user: any; onEdit: () => void }> = ({ profile, user, onEdit }) => {
@@ -108,6 +125,65 @@ const ProfileView: React.FC<{ profile: ProfileData; user: any; onEdit: () => voi
           </span>
         </div>
 
+        <div className="mt-8 bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Team Preferences</h2>
+          <div className="space-y-4">
+            <div>
+              <p className="text-gray-600">Team Status</p>
+              <span className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm">
+                {profile.teamStatus ? profile.teamStatus.replace(/_/g, ' ').toLowerCase() : 'Not specified'}
+              </span>
+            </div>
+
+            <div>
+              <p className="text-gray-600">Experience Level</p>
+              <span className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm">
+                {profile.experienceLevel || 'Not specified'}
+              </span>
+            </div>
+
+            <div>
+              <p className="text-gray-600">Project Interests</p>
+              <div className="flex flex-wrap gap-2">
+                {profile.projectInterests?.map((interest, index) => (
+                  <span key={index} className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm">
+                    {interest}
+                  </span>
+                )) || <span className="text-gray-500">No interests specified</span>}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-gray-600">Preferred Team Size</p>
+              <span className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm">
+                {profile.preferredTeamSize || 'Not specified'}
+              </span>
+            </div>
+
+            <div>
+              <p className="text-gray-600">Hackathon Interests</p>
+              <div className="flex flex-wrap gap-2">
+                {profile.hackathonInterests?.map((interest, index) => (
+                  <span key={index} className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm">
+                    {interest}
+                  </span>
+                )) || <span className="text-gray-500">No interests specified</span>}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-gray-600">Communication Preferences</p>
+              <div className="flex flex-wrap gap-2">
+                {profile.communicationPreference?.map((pref, index) => (
+                  <span key={index} className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm">
+                    {pref}
+                  </span>
+                )) || <span className="text-gray-500">Not specified</span>}
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="mt-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Projects</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -174,7 +250,14 @@ const ProfilePage: React.FC = () => {
     role: '',
     followers: 0,
     following: 0,
-    projects: [], // Initialize with an empty array
+    projects: [],
+    teamStatus: '',
+    projectInterests: [],
+    experienceLevel: '',
+    availabilityPreference: '',
+    communicationPreference: [],
+    preferredTeamSize: '',
+    hackathonInterests: [],
   });
   const [isEditing, setIsEditing] = useState(false);
   const [photo, setPhoto] = useState<File | null>(null);
@@ -214,11 +297,18 @@ const ProfilePage: React.FC = () => {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setProfile({ ...profile, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setProfile(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setProfile({ ...profile, [name]: value });
+    setProfile(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleProjectChange = (index: number, field: string, value: string) => {
@@ -239,33 +329,44 @@ const ProfilePage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (user) {
-      setIsSubmitting(true);
-      try {
-        let photoUrl = profile.photoUrl;
+    setIsSubmitting(true);
 
-        if (photo) {
-          const photoRef = ref(storage, `profile-photos/${user.uid}`);
-          await uploadBytes(photoRef, photo);
-          photoUrl = await getDownloadURL(photoRef);
-        }
+    try {
+      const userDocRef = doc(db, 'users', user!.uid);
+      await setDoc(userDocRef, {
+        ...profile,
+        projectInterests: profile.projectInterests || [],
+        hackathonInterests: profile.hackathonInterests || [],
+        communicationPreference: profile.communicationPreference || [],
+      }, { merge: true });
 
-        const updatedProfile: ProfileData = {
-          ...profile,
-          photoUrl,
-        };
-
-        await setDoc(doc(db, 'users', user.uid), updatedProfile, { merge: true });
-        setProfile(updatedProfile);
-        setIsEditing(false);
-        alert('Profile updated successfully!');
-      } catch (error) {
-        console.error("Error updating profile:", error);
-        alert('An error occurred while updating your profile.');
-      } finally {
-        setIsSubmitting(false);
-      }
+      toast({
+        title: "Success",
+        description: "Profile updated successfully",
+      });
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update profile",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  const toggleArrayField = (field: keyof ProfileData, value: string) => {
+    setProfile(prev => {
+      const array = prev[field] as string[] || [];
+      return {
+        ...prev,
+        [field]: array.includes(value)
+          ? array.filter(item => item !== value)
+          : [...array, value]
+      };
+    });
   };
 
   if (loading) {
@@ -424,6 +525,114 @@ const ProfilePage: React.FC = () => {
                       </div>
                     ))}
                     <Button onClick={addProject} type="button" variant="outline" className="mb-4">Add Another Project</Button>
+                  </div>
+                  <div className="space-y-6 mt-6">
+                    <h3 className="text-xl font-semibold">Team Preferences</h3>
+                    
+                    <div>
+                      <label className="block mb-1">Team Status</label>
+                      <Select 
+                        value={profile.teamStatus} 
+                        onValueChange={(value) => handleSelectChange('teamStatus', value)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select Team Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(TEAM_STATUS).map(([key, value]) => (
+                            <SelectItem key={value} value={value}>
+                              {key.charAt(0) + key.slice(1).toLowerCase().replace('_', ' ')}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <label className="block mb-1">Experience Level</label>
+                      <Select 
+                        value={profile.experienceLevel} 
+                        onValueChange={(value) => handleSelectChange('experienceLevel', value)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select Experience Level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {EXPERIENCE_LEVELS.map(level => (
+                            <SelectItem key={level} value={level.toLowerCase()}>
+                              {level}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <label className="block mb-1">Project Interests</label>
+                      <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-md">
+                        {PROJECT_INTERESTS.map(interest => (
+                          <Badge
+                            key={interest}
+                            variant={profile.projectInterests?.includes(interest) ? "default" : "outline"}
+                            className="cursor-pointer"
+                            onClick={() => toggleArrayField('projectInterests', interest)}
+                          >
+                            {interest}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block mb-1">Preferred Team Size</label>
+                      <Select 
+                        value={profile.preferredTeamSize} 
+                        onValueChange={(value) => handleSelectChange('preferredTeamSize', value)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select Team Size" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {TEAM_SIZES.map(size => (
+                            <SelectItem key={size.value} value={size.value}>
+                              {size.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <label className="block mb-1">Hackathon Interests</label>
+                      <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-md">
+                        {HACKATHON_INTERESTS.map(interest => (
+                          <Badge
+                            key={interest}
+                            variant={profile.hackathonInterests?.includes(interest) ? "default" : "outline"}
+                            className="cursor-pointer"
+                            onClick={() => toggleArrayField('hackathonInterests', interest)}
+                          >
+                            {interest}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block mb-1">Communication Preferences</label>
+                      <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-md">
+                        {COMMUNICATION_PREFERENCES.map(pref => (
+                          <Badge
+                            key={pref}
+                            variant={profile.communicationPreference?.includes(pref) ? "default" : "outline"}
+                            className="cursor-pointer"
+                            onClick={() => toggleArrayField('communicationPreference', pref)}
+                          >
+                            {pref}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                   <div className="flex space-x-4">
                     <Button type="submit" disabled={isSubmitting}>
