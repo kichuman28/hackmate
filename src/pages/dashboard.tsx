@@ -1,4 +1,6 @@
 // pages/dashboard.tsx
+"use client"
+import "../app/globals.css";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../hooks/useAuth';
