@@ -36,7 +36,6 @@ export interface TeamConnection {
 }
 
 export interface TeamFilters {
-  skills: string;
   projectInterest: string;
   teamStatus: string;
   experienceLevel: string;

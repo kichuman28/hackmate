@@ -11,6 +11,7 @@ import { TeamCard } from '@/components/TeamCard';
 import { TeamFiltersSection } from '@/components/TeamFilters';
 import { UserProfile, TeamFilters } from '@/types/team';
 import { TEAM_STATUS } from '@/app/constants';
+import { useToast } from "@/components/ui/use-toast";
 
 const Dashboard = () => {
   const router = useRouter();
@@ -18,55 +19,78 @@ const Dashboard = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<TeamFilters>({
-    skills: '',
     projectInterest: 'all',
     teamStatus: 'all',
     experienceLevel: 'all'
   });
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  console.log("Current user:", user?.uid);
 
   useEffect(() => {
-    if (user) fetchUsers();
+    if (user) {
+      fetchUsers();
+    }
   }, [user, filters]);
 
   const fetchUsers = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log("No user found");
+      return;
+    }
+    
     setLoading(true);
+    console.log("Current filters:", filters);
     
     try {
       const usersRef = collection(db, 'users');
+      let constraints = [];
       
-      // First, let's try without any constraints to see if we get any users
-      const q = query(usersRef);
+      if (filters.teamStatus !== 'all') {
+        constraints.push(where('teamStatus', '==', filters.teamStatus));
+      }
       
-      console.log('Current user ID:', user.uid); // Log current user's ID
+      if (filters.experienceLevel !== 'all') {
+        constraints.push(where('experienceLevel', '==', filters.experienceLevel.toLowerCase()));
+      }
       
-      const querySnapshot = await getDocs(q);
-      console.log('Total users found:', querySnapshot.size);
+      if (filters.projectInterest !== 'all') {
+        constraints.push(where('projectInterests', 'array-contains', filters.projectInterest));
+      }
       
-      // Log all users to see what we're getting
-      querySnapshot.forEach(doc => {
-        console.log('User:', {
+      const baseQuery = constraints.length > 0 
+        ? query(usersRef, ...constraints)
+        : query(usersRef);
+      
+      console.log("Applying filters:", constraints);
+      const querySnapshot = await getDocs(baseQuery);
+      console.log("Filtered results:", querySnapshot.size);
+      
+      const usersList = querySnapshot.docs
+        .map(doc => ({
+          ...doc.data(),
           id: doc.id,
-          data: doc.data()
-        });
-      });
-
-      let usersList = querySnapshot.docs.map(doc => ({ 
-        id: doc.id, 
-        ...doc.data() 
-      } as UserProfile));
-
-      console.log('Mapped users list:', usersList);
+        } as UserProfile))
+        .filter(profile => profile.id !== user.uid);
       
       setUsers(usersList);
+      
     } catch (error) {
       console.error("Error fetching users:", error);
-      setError(error instanceof Error ? error.message : 'An error occurred while fetching users');
+      toast({
+        title: "Error",
+        description: "Failed to fetch users. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <ProtectedRoute>
@@ -107,10 +131,6 @@ const Dashboard = () => {
                 >
                   Try Again
                 </Button>
-              </div>
-            ) : loading ? (
-              <div className="text-center py-8">
-                <p>Loading potential teammates...</p>
               </div>
             ) : users.length === 0 ? (
               <div className="text-center py-8">

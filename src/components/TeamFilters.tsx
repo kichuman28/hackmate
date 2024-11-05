@@ -1,4 +1,3 @@
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   PROJECT_INTERESTS, 
@@ -14,6 +13,7 @@ interface TeamFiltersProps {
 
 export const TeamFiltersSection = ({ filters, onFilterChange }: TeamFiltersProps) => {
   const handleChange = (key: keyof TeamFilters, value: string) => {
+    console.log(`Changing ${key} to:`, value);
     onFilterChange({
       ...filters,
       [key]: value
@@ -22,13 +22,7 @@ export const TeamFiltersSection = ({ filters, onFilterChange }: TeamFiltersProps
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Input
-          placeholder="Search by skills..."
-          value={filters.skills}
-          onChange={(e) => handleChange('skills', e.target.value)}
-        />
-
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Select
           value={filters.projectInterest}
           onValueChange={(value) => handleChange('projectInterest', value)}
