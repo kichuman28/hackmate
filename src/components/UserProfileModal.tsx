@@ -30,8 +30,8 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ user }) => {
   const fallbackInitial = user.name ? user.name[0].toUpperCase() : '?';
 
   const handleMessageClick = () => {
-    // Navigate to chat page with the user's ID
-    router.push(`/chat/${user.id}`);
+    // Navigate to user profile page
+    router.push(`/user/${user.id}`);
   };
 
   return (
