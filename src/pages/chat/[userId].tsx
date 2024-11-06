@@ -58,6 +58,25 @@ const ChatPage = () => {
 
   useEffect(() => {
     if (userId && user) {
+      // Check if users are connected (following each other)
+      const checkConnection = async () => {
+        const [senderDoc, receiverDoc] = await Promise.all([
+          getDoc(doc(db, 'users', user.uid)),
+          getDoc(doc(db, 'users', userId as string))
+        ]);
+
+        const senderData = senderDoc.data();
+        const receiverData = receiverDoc.data();
+
+        if (!senderData?.following?.includes(userId) || 
+            !receiverData?.following?.includes(user.uid)) {
+          router.push(`/user/${userId}`);
+          return;
+        }
+      };
+
+      checkConnection();
+
       // Fetch profiles
       const fetchProfiles = async () => {
         try {
