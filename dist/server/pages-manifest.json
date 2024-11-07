@@ -3,7 +3,7 @@
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
   "/profile": "pages/profile.js",
-  "/discover": "pages/discover.js",
   "/dashboard": "pages/dashboard.js",
+  "/discover": "pages/discover.js",
   "/chat/[userId]": "pages/chat/[userId].js"
 }
