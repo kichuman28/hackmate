@@ -5,6 +5,5 @@
   "/profile": "pages/profile.js",
   "/dashboard": "pages/dashboard.js",
   "/discover": "pages/discover.js",
-  "/chat/[userId]": "pages/chat/[userId].js",
-  "/chats/overview": "pages/chats/overview.js"
+  "/chat/[userId]": "pages/chat/[userId].js"
 }
