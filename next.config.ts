@@ -1,8 +1,18 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import { NextConfig } from 'next'
+
+const nextConfig: NextConfig = {
   experimental: {
-    appDir: true,
+    serverActions: {}, // Allows for server actions if needed
+  },
+  reactStrictMode: true,
+  swcMinify: true, // Optimizes builds with SWC
+  images: {
+    domains: ['your-image-source.com'], // Add external domains for images
+  },
+  typescript: {
+    ignoreBuildErrors: false,
   },
 }
 
-module.exports = nextConfig
+export default nextConfig
+ 
