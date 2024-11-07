@@ -345,12 +345,7 @@ const OnboardingPage: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(4)) {
-      return;
-    }
-
     setIsSubmitting(true);
-
     try {
       let photoUrl = data.photoUrl;
 
@@ -377,16 +372,16 @@ const OnboardingPage: React.FC = () => {
       await setDoc(doc(db, 'users', user!.uid), onboardingData, { merge: true });
       
       toast({
-        title: "Onboarding completed",
-        description: "Your profile has been updated successfully!",
+        title: "Success",
+        description: "Onboarding completed successfully",
       });
-      
-      router.push('/dashboard');
+
+      router.push('/profile');
     } catch (error) {
-      console.error("Error updating profile:", error);
+      console.error("Error completing onboarding:", error);
       toast({
         title: "Error",
-        description: "There was an error updating your profile. Please try again.",
+        description: "Failed to complete onboarding",
         variant: "destructive",
       });
     } finally {

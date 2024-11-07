@@ -84,6 +84,10 @@ export default function Dashboard() {
     return <div>Loading...</div>;
   }
 
+  if (!user) {
+    return <div>Signing you out...</div>;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50">
       <main className="container mx-auto px-4 pt-24">
@@ -132,7 +136,7 @@ export default function Dashboard() {
                 <TeamCard
                   key={profile.id}
                   profile={profile}
-                  currentUserId={user!.uid}
+                  currentUserId={user.uid}
                 />
               ))}
             </div>

@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import { auth, googleProvider } from '../lib/firebaseConfig';
 import { signInWithPopup, onAuthStateChanged, signOut, User } from 'firebase/auth';
@@ -7,6 +9,7 @@ import { db } from '../lib/firebaseConfig';
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -14,18 +17,20 @@ export const useAuth = () => {
       setLoading(false);
 
       if (user) {
-        // Check if user exists in Firestore
         const userDocRef = doc(db, 'users', user.uid);
         const userDoc = await getDoc(userDocRef);
 
         if (!userDoc.exists()) {
-          // Add user to Firestore
+          setNeedsOnboarding(true);
           await setDoc(userDocRef, {
             name: user.displayName,
             email: user.email,
             photoUrl: user.photoURL,
             createdAt: new Date(),
+            onboardingCompleted: false,
           });
+        } else {
+          setNeedsOnboarding(!userDoc.data()?.onboardingCompleted);
         }
       }
     });
@@ -43,13 +48,8 @@ export const useAuth = () => {
 
   const logout = async () => {
     try {
-      // Clear states before signing out
       setUser(null);
-      
-      // Sign out from Firebase
       await signOut(auth);
-      
-      // Clear any local state if needed
       return true;
     } catch (error) {
       console.error('Error signing out:', error);
@@ -57,5 +57,5 @@ export const useAuth = () => {
     }
   };
 
-  return { user, loading, signInWithGoogle, logout };
+  return { user, loading, needsOnboarding, signInWithGoogle, logout };
 };
